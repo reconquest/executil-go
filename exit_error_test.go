@@ -12,7 +12,11 @@ import (
 func TestIsExitError_ReturnsTrueForOsExitError(t *testing.T) {
 	test := assert.New(t)
 
-	test.True(IsExitError(&exec.ExitError{&os.ProcessState{}}))
+	test.True(
+		IsExitError(
+			&exec.ExitError{ProcessState: &os.ProcessState{}},
+		),
+	)
 }
 
 func TestIsExitError_ReturnsTrueForExecutilErrorWhenRunErrIsExitError(
@@ -20,7 +24,11 @@ func TestIsExitError_ReturnsTrueForExecutilErrorWhenRunErrIsExitError(
 ) {
 	test := assert.New(t)
 
-	test.True(IsExitError(&Error{RunErr: &exec.ExitError{&os.ProcessState{}}}))
+	test.True(
+		IsExitError(
+			&Error{RunErr: &exec.ExitError{ProcessState: &os.ProcessState{}}},
+		),
+	)
 }
 
 func TestIsExitError_ReturnsFalseForExecutilErrorWithNonExecError(

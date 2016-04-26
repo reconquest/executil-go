@@ -4,20 +4,19 @@ import (
 	"bytes"
 	"io"
 	"os/exec"
-	"sync"
 )
 
-type threadsafeBuffer struct {
-	sync.Mutex
-	bytes.Buffer
-}
+type option int
 
-func (buffer *threadsafeBuffer) Write(data []byte) (int, error) {
-	buffer.Lock()
-	defer buffer.Unlock()
+const (
+	// IgnoreStdout is option for executil.Run() which should be passed if
+	// stdout data should be ignored.
+	IgnoreStdout option = iota
 
-	return buffer.Buffer.Write(data)
-}
+	// IgnoreStderr is option for executil.Run() which should be passed if
+	// stderr data should be ignored.
+	IgnoreStderr
+)
 
 // Run sets writers for stdout and stderr, starts the specified command and
 // waits for it to complete.
@@ -26,15 +25,34 @@ func (buffer *threadsafeBuffer) Write(data []byte) (int, error) {
 // copying stdin, stdout, and stderr, and exits with a zero exit
 // status.
 // Otherwise, the error is of type Error.
-func Run(cmd *exec.Cmd) (stdout []byte, stderr []byte, err error) {
+func Run(
+	cmd *exec.Cmd, options ...option,
+) (stdout []byte, stderr []byte, err error) {
 	var (
 		stdoutBuffer   = &bytes.Buffer{}
 		stderrBuffer   = &bytes.Buffer{}
 		combinedBuffer = &threadsafeBuffer{}
+
+		ignoreStdout bool
+		ignoreStderr bool
 	)
 
-	cmd.Stdout = io.MultiWriter(stdoutBuffer, combinedBuffer)
-	cmd.Stderr = io.MultiWriter(stderrBuffer, combinedBuffer)
+	for _, option := range options {
+		switch option {
+		case IgnoreStdout:
+			ignoreStdout = true
+
+		case IgnoreStderr:
+			ignoreStderr = true
+		}
+	}
+
+	if !ignoreStdout {
+		cmd.Stdout = io.MultiWriter(stdoutBuffer, combinedBuffer)
+	}
+	if !ignoreStderr {
+		cmd.Stderr = io.MultiWriter(stderrBuffer, combinedBuffer)
+	}
 
 	runErr := cmd.Run()
 	if runErr != nil {

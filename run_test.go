@@ -72,3 +72,32 @@ func TestRun_ReturnsErrorWithExitStatus2(t *testing.T) {
 	test.True(IsExitError(err), "error should be type of ExitError")
 	test.Equal(GetExitStatus(err), 2)
 }
+
+func TestRun_IgnoresStdoutIfOptionSpecified(t *testing.T) {
+	test := assert.New(t)
+
+	stdout, stderr, err := Run(getCommandWithStdoutAndStderr(), IgnoreStdout)
+	test.NoError(err)
+	test.Equal("", string(stdout))
+	test.Equal("stderr\n", string(stderr))
+}
+
+func TestRun_IgnoresStderrIfOptionSpecified(t *testing.T) {
+	test := assert.New(t)
+
+	stdout, stderr, err := Run(getCommandWithStdoutAndStderr(), IgnoreStderr)
+	test.NoError(err)
+	test.Equal("stdout\n", string(stdout))
+	test.Equal("", string(stderr))
+}
+
+func TestRun_IgnoresStdoutAndStderrIfOptionsSpecified(t *testing.T) {
+	test := assert.New(t)
+
+	stdout, stderr, err := Run(
+		getCommandWithStdoutAndStderr(), IgnoreStdout, IgnoreStderr,
+	)
+	test.NoError(err)
+	test.Equal("", string(stdout))
+	test.Equal("", string(stderr))
+}

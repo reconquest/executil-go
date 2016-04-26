@@ -3,6 +3,8 @@ package executil
 import (
 	"fmt"
 	"os/exec"
+
+	"github.com/seletskiy/hierr"
 )
 
 // Error records the actual combined output of executed command, original error
@@ -18,11 +20,24 @@ type Error struct {
 
 // Error returns string representation of Error type.
 func (err *Error) Error() string {
-	value := fmt.Sprintf("exec [%q] failed (%s) ", err.Cmd.Args, err.RunErr)
+	value := fmt.Sprintf("exec %q error (%s) ", err.Cmd.Args, err.RunErr)
 	if len(err.Output) > 0 {
 		value = value + "with output:\n" + string(err.Output)
 	} else {
 		value = value + "without output"
 	}
 	return value
+}
+
+// HierarchicalError returns hierarchical string representation using hierr
+// package.
+func (err *Error) HierarchicalError() string {
+	runError := err.RunErr
+	if len(err.Output) > 0 {
+		runError = hierr.Push(runError, string(err.Output))
+	} else {
+		runError = hierr.Push(runError, "output data is empty")
+	}
+
+	return hierr.Errorf(runError, "exec %q error", err.Cmd.Args).Error()
 }

@@ -2,7 +2,11 @@ package executil
 
 import (
 	"errors"
+	"reflect"
 	"testing"
+	"unsafe"
+
+	"golang.org/x/crypto/ssh"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -57,4 +61,20 @@ func TestGetExitStatus_ReturnsZeroForNonExitError(
 	test := assert.New(t)
 
 	test.Equal(0, GetExitStatus(errors.New("blah")))
+}
+
+func TestGetExitStatus_ReturnsExitStatusOfSshExitError(
+	t *testing.T,
+) {
+	test := assert.New(t)
+
+	err := new(ssh.ExitError)
+
+	pointer := reflect.Indirect(reflect.ValueOf(err)).
+		FieldByName("Waitmsg").FieldByName("status").UnsafeAddr()
+
+	exitcode := 8
+	*(*int)(unsafe.Pointer(pointer)) = *(*int)(unsafe.Pointer(&exitcode))
+
+	test.Equal(8, GetExitStatus(err))
 }

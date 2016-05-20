@@ -6,10 +6,12 @@ import (
 	"os/exec"
 	"testing"
 
+	"golang.org/x/crypto/ssh"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsExitError_ReturnsTrueForOsExitError(t *testing.T) {
+func TestIsExitError_ReturnsTrueForOsExecExitError(t *testing.T) {
 	test := assert.New(t)
 
 	test.True(
@@ -19,7 +21,7 @@ func TestIsExitError_ReturnsTrueForOsExitError(t *testing.T) {
 	)
 }
 
-func TestIsExitError_ReturnsTrueForExecutilErrorWhenRunErrIsExitError(
+func TestIsExitError_ReturnsTrueForExecutilErrorWhenRunIsOsExecExitError(
 	t *testing.T,
 ) {
 	test := assert.New(t)
@@ -28,6 +30,14 @@ func TestIsExitError_ReturnsTrueForExecutilErrorWhenRunErrIsExitError(
 		IsExitError(
 			&Error{RunErr: &exec.ExitError{ProcessState: &os.ProcessState{}}},
 		),
+	)
+}
+
+func TestIsExitError_ReturnsTrueForSshExitError(t *testing.T) {
+	test := assert.New(t)
+
+	test.True(
+		IsExitError(new(ssh.ExitError)),
 	)
 }
 

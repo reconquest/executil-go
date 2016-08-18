@@ -23,8 +23,6 @@ func (err *Error) Error() string {
 	value := fmt.Sprintf("exec %q error (%s) ", err.Cmd.Args, err.RunErr)
 	if len(err.Output) > 0 {
 		value = value + "with output:\n" + string(err.Output)
-	} else {
-		value = value + "without output"
 	}
 	return value
 }
@@ -35,8 +33,6 @@ func (err *Error) HierarchicalError() string {
 	runError := err.RunErr
 	if len(err.Output) > 0 {
 		runError = hierr.Push(runError, string(err.Output))
-	} else {
-		runError = hierr.Push(runError, "output data is empty")
 	}
 
 	return hierr.Errorf(runError, "exec %q error", err.Cmd.Args).Error()

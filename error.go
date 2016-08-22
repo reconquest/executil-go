@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/seletskiy/hierr"
+	"github.com/reconquest/ser-go"
 )
 
 // Error records the actual combined output of executed command, original error
@@ -12,8 +12,10 @@ import (
 type Error struct {
 	// RunErr is a original occurred error.
 	RunErr error
+
 	// Cmd is a original executed command.
 	Cmd *exec.Cmd
+
 	// Output is a combined output of executing command.
 	Output []byte
 }
@@ -32,8 +34,8 @@ func (err *Error) Error() string {
 func (err *Error) HierarchicalError() string {
 	runError := err.RunErr
 	if len(err.Output) > 0 {
-		runError = hierr.Push(runError, string(err.Output))
+		runError = ser.Push(runError, string(err.Output))
 	}
 
-	return hierr.Errorf(runError, "exec %q error", err.Cmd.Args).Error()
+	return ser.Errorf(runError, "exec %q error", err.Cmd.Args).Error()
 }

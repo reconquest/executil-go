@@ -27,7 +27,7 @@ type Error struct {
 
 // Error returns string representation of Error type.
 func (err *Error) Error() string {
-	args := err.getArgs()
+	args := err.GetArgs()
 	if len(args) == 0 {
 		return err.RunErr.Error()
 	}
@@ -42,7 +42,7 @@ func (err *Error) Error() string {
 // HierarchicalError returns hierarchical string representation using hierr
 // package.
 func (err *Error) HierarchicalError() string {
-	args := err.getArgs()
+	args := err.GetArgs()
 	if len(args) == 0 {
 		return err.RunErr.Error()
 	}
@@ -55,7 +55,7 @@ func (err *Error) HierarchicalError() string {
 	return ser.Errorf(runError, "exec %q error", args).Error()
 }
 
-func (err *Error) getArgs() []string {
+func (err *Error) GetArgs() []string {
 	if cmd, ok := err.Cmd.(CommandWithArgs); ok {
 		return cmd.GetArgs()
 	} else if cmd, ok := err.Cmd.(*exec.Cmd); ok {

@@ -7,6 +7,10 @@ import (
 	"github.com/reconquest/ser-go"
 )
 
+type CommandWithArgs interface {
+	GetArgs() []string
+}
+
 // Error records the actual combined output of executed command, original error
 // and executed cmd.
 type Error struct {
@@ -14,7 +18,8 @@ type Error struct {
 	RunErr error
 
 	// Cmd is a original executed command.
-	Cmd *exec.Cmd
+	// can be *exec.Command or lexec.Command
+	Cmd interface{}
 
 	// Output is a combined output of executing command.
 	Output []byte
@@ -22,7 +27,12 @@ type Error struct {
 
 // Error returns string representation of Error type.
 func (err *Error) Error() string {
-	value := fmt.Sprintf("exec %q error (%s) ", err.Cmd.Args, err.RunErr)
+	args := err.getArgs()
+	if len(args) == 0 {
+		return err.RunErr.Error()
+	}
+
+	value := fmt.Sprintf("exec %q error (%s) ", args, err.RunErr)
 	if len(err.Output) > 0 {
 		value = value + "with output:\n" + string(err.Output)
 	}
@@ -32,10 +42,25 @@ func (err *Error) Error() string {
 // HierarchicalError returns hierarchical string representation using hierr
 // package.
 func (err *Error) HierarchicalError() string {
+	args := err.getArgs()
+	if len(args) == 0 {
+		return err.RunErr.Error()
+	}
+
 	runError := err.RunErr
 	if len(err.Output) > 0 {
 		runError = ser.Push(runError, string(err.Output))
 	}
 
-	return ser.Errorf(runError, "exec %q error", err.Cmd.Args).Error()
+	return ser.Errorf(runError, "exec %q error", args).Error()
+}
+
+func (err *Error) getArgs() []string {
+	if cmd, ok := err.Cmd.(CommandWithArgs); ok {
+		return cmd.GetArgs()
+	} else if cmd, ok := err.Cmd.(*exec.Cmd); ok {
+		return cmd.Args
+	}
+
+	return []string{}
 }

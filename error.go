@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/reconquest/ser-go"
+	"github.com/reconquest/karma-go"
 )
 
 type CommandWithArgs interface {
@@ -35,11 +35,14 @@ func (err *Error) Error() string {
 	value := fmt.Sprintf("exec %q error (%s) ", args, err.RunErr)
 	if len(err.Output) > 0 {
 		value = value + "with output:\n" + string(err.Output)
+	} else {
+		value = value + "without output"
 	}
+
 	return value
 }
 
-// HierarchicalError returns hierarchical string representation using hierr
+// HierarchicalError returns hierarchical string representation using karma
 // package.
 func (err *Error) HierarchicalError() string {
 	args := err.GetArgs()
@@ -49,10 +52,10 @@ func (err *Error) HierarchicalError() string {
 
 	runError := err.RunErr
 	if len(err.Output) > 0 {
-		runError = ser.Push(runError, string(err.Output))
+		runError = karma.Push(runError, string(err.Output))
 	}
 
-	return ser.Errorf(runError, "exec %q error", args).Error()
+	return karma.Format(runError, "exec %q error", args).Error()
 }
 
 func (err *Error) GetArgs() []string {
